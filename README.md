@@ -6,3 +6,5 @@
 - Succesfully delivers consistently high ROI's when run on a backtester for a portfolio of stocks over a given timeframe
 - Placed top 5 in the competition
   
+![main solution](https://github.com/Shrey-Varma/CTC23/blob/main/sol1.png?raw=true)
+![turnover constraint](https://github.com/Shrey-Varma/CTC23/blob/main/sol2.png?raw=true)
