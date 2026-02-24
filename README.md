@@ -2,7 +2,7 @@
 
 # 📈 Cornell Trading Competition 2023
 
-### Algorithmic Options Trading System — VIX & SPX Index Derivatives
+### Multi-Case Algorithmic Trading Competition — Portfolio Optimization & VIX/SPX Options Strategies
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python)](https://python.org/)
 [![Pandas](https://img.shields.io/badge/Pandas-1.5+-150458?logo=pandas)](https://pandas.pydata.org/)
@@ -10,7 +10,7 @@
 [![PuLP](https://img.shields.io/badge/PuLP-LP%20Solver-orange)](https://coin-or.github.io/pulp/)
 [![yFinance](https://img.shields.io/badge/yFinance-Market%20Data-blue)](https://github.com/ranaroussi/yfinance)
 
-**Algorithmic options trading system exploiting the inverse correlation between VIX and SPX to generate directional trade signals and execute margin-aware long-short portfolios.**
+**A two-case quantitative trading competition: a margin-aware LP long-short equity portfolio (Case 1, code in this repo) and an algorithmic VIX/SPX options system exploiting their inverse correlation (Case 2).**
 
 [Cornell Trading Competition](https://github.com/Shrey-Varma/CTC23) · [Strategy](#strategy) · [Implementation](#implementation)
 
@@ -20,35 +20,31 @@
 
 ## Overview
 
-Built for the **Cornell Quantitative Trading Competition 2023**, this system implements a systematic, rules-based options trading strategy on VIX call/put derivatives and SPX index options. The engine exploits the well-documented inverse relationship between the S&P 500 (SPX) and the CBOE Volatility Index (VIX) to generate directional signals, then applies linear programming to construct an optimal long-short portfolio subject to margin and turnover constraints.
+Built for the **Cornell Quantitative Trading Competition 2023**, this repo contains solutions to two independent competition cases:
 
-The portfolio operates on a **$1 million notional** across equities in Brazil, Mexico, India, and the US.
+### Case 1 — Long-Short Equity Portfolio Optimization (`case1_official.py`)
+
+A margin-aware, daily-rebalancing **long-short equity portfolio** across 20 stocks in 4 markets (Brazil, Mexico, India, US). At each step, a Mixed-Integer Linear Program (MILP) maximizes expected return subject to dollar-neutrality, position limits, and a 25% turnover cap — operating on a **$1 million notional**.
+
+### Case 2 — VIX/SPX Options Trading Strategy
+
+An algorithmic options trading system targeting **VIX call and put derivatives** by exploiting the well-documented inverse correlation (~−0.7 to −0.8) between the S&P 500 (SPX) and the CBOE Volatility Index (VIX). SPX momentum signals drive directional positioning in VIX options: bearish SPX → long VIX calls; bullish SPX → long VIX puts. Position sizing and margin constraints are enforced throughout.
 
 ---
 
-## Strategy
+---
 
-### Inverse Correlation Exploitation
+## Case 1 — Strategy & Implementation
 
-The VIX ("fear index") and SPX exhibit a persistent negative correlation (~−0.7 to −0.8). When SPX momentum is bearish:
-- **Go long VIX calls** (volatility expected to spike)
-- **Cover with VIX puts** (hedge against mean-reversion)
+### Portfolio Construction — Linear Programming
 
-When SPX momentum is bullish:
-- **Short VIX calls** (volatility expected to compress)
-- **Go long VIX puts**
-
-### Signal Generation
-
-Directional signals are derived from momentum indicators calculated on daily SPX Open-to-Close returns:
+Daily expected returns per asset drive the MILP objective. A rolling window (first 7 days) initializes the momentum regime; subsequent signals are single-period open-to-close returns:
 
 ```
 Expected Return(t) = (Close(t) - Open(t)) / Open(t)
 ```
 
-A rolling window (first 7 days used for initialization) establishes the baseline momentum regime. Subsequent signals are generated day-by-day on a single-period basis.
-
-### Portfolio Construction — Linear Programming
+### MILP Formulation
 
 At each rebalancing step, the optimal portfolio weights are solved via a Linear Program (LP) using the [PuLP](https://coin-or.github.io/pulp/) solver:
 
@@ -157,6 +153,23 @@ Modify the `main()` function to change:
 - **Portfolio universe** — add/remove tickers or markets
 - **Date range** — `start` and `end` parameters for historical data
 - **Turnover limit** — the `upBound=0.25` on `t` variables
+
+---
+
+## Case 2 — VIX/SPX Options Strategy
+
+The second competition case targeted index derivatives. The strategy generates directional signals on SPX momentum and positions in VIX options accordingly:
+
+| SPX Regime | VIX Options Position |
+|---|---|
+| **Bearish** (negative momentum) | Long VIX calls — volatility expected to spike |
+| **Bullish** (positive momentum) | Long VIX puts — volatility expected to compress |
+
+**Key design elements:**
+- Momentum measured via rolling SPX Open-to-Close returns
+- Margin-aware sizing: gross exposure capped relative to $1M notional
+- Turnover constraints prevent over-trading around VIX spikes
+- Inverse correlation (VIX/SPX ≈ −0.75) provides the statistical edge
 
 ---
 
